@@ -169,3 +169,25 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 		return grid;
 	}
 /*----------------------------------------------------------СОЗДАНИЕ И ОТРИСОВКА СЕТКИ--------------------------------------------------*/
+
+/*----------------------------------------------------------ВОССТАНОВЛЕНИЕ ИЗОБРАЖЕНИЯ--------------------------------------------------*/
+	void FuckMeApplication::restoreBtnHandler() {
+		QImage image(256, 256, QImage::Format_Grayscale8);
+		image.fill(Qt::white);
+		QImage src = this->ui.SrcImage->pixmap()->toImage();
+		//Заливка средним
+		if (this->ui.AverageLightness->isChecked()) {
+			image = this->root.FillAverageLightness(image, src);
+		}
+		//Линейная регрессия
+		else if (this->ui.LinearRegression->isChecked()) {
+			image = this->root.FillLinearRegression(image, src);
+		}
+		//Плоскостная регрессия
+		else {
+			image = this->root.FillSurfaceRegression(image, src);
+		}
+
+		this->loadImageFromQImage(image, ui.ResImage);
+	}
+/*----------------------------------------------------------ВОССТАНОВЛЕНИЕ ИЗОБРАЖЕНИЯ--------------------------------------------------*/

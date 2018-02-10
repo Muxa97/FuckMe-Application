@@ -90,6 +90,31 @@ public:
 	* Максимальная координата по оси Y, если достроить полигон до прямоугольника
 	*/
 	int GetMaxY();
+
+	/**
+	* Заливка средним
+	* @param QImage image - изображение
+	* @param QImage src - исходное изображение
+	* @return QImage image - восстановленное изображение
+	*/
+	QImage FillAverageLightness(QImage, QImage);
+
+	/**
+	* Заливка с помощью линейной регрессии
+	* @param QImage image - изображение
+	* @param QImage src - исходное изображение
+	* @return QImage image - восстановленное изображение
+	*/
+	QImage FillLinearRegression(QImage, QImage);
+
+	/**
+	* Заливка с помощью плоскостной регрессии
+	* @param QImage image - изображение
+	* @param QImage src - исходное изображение
+	* @return QImage image - восстановленное изображение
+	*/
+	QImage FillSurfaceRegression(QImage, QImage);
+	
 };
 
 /**
@@ -105,3 +130,11 @@ QPoint GetMiddlePoint(QPoint, QPoint);
 * @return QVector<QPoint> points - отсортированный вектор точек
 */
 QVector<QPoint> SortPoints(QVector<QPoint>);
+/**
+* Определяет, лежит ли точка P на отрезке AB
+* @param QPoint p
+* @param QPoint A
+* @param QPoint B
+* @return bool res - true, если лежит, иначе false
+*/
+bool IsOnLine(QPoint, QPoint, QPoint);

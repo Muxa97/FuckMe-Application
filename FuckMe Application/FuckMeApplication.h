@@ -48,6 +48,6 @@ private slots:
 	void clearBtnHandler();
 	void splitBtnHandler();
 	/*void sgBtnHandler();
-	void lgBtnHandler();
-	void restoreBtnHandler();*/
+	void lgBtnHandler();*/
+	void restoreBtnHandler();
 };

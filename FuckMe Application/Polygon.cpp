@@ -73,7 +73,7 @@ void Polygon::CreateGrid(QImage src, int threshold)
 				if (clr.lightness() > max) max = clr.lightness();
 				if (clr.lightness() < min) min = clr.lightness();
 
-				if ((max - min) > threshold) {
+				if ((max - min) >= threshold) {
 					//Разбиваем полигон на части
 					this->AddChildren();
 					//Каждую из них проверяем
@@ -92,20 +92,22 @@ void Polygon::CreateGrid(QImage src, int threshold)
 //Вроде имеет какие-то неточности, будем надеяться, несущественные
 bool Polygon::ContainsPoint(QPoint point) {
 	bool res = false;
+	QPolygon poly;
+	if (this->point.size() == 2)
+		poly = QPolygon({ this->point[0], QPoint(this->point[1].x(), this->point[0].y()), this->point[1], QPoint(this->point[0].x(), this->point[1].y()) });
+	else 
+		poly = QPolygon(this->point);
 
-	for (int i = 1; i <= this->point.size(); i++) {
-		if ((((this->point[i % this->point.size()].y() <= point.y()) && (point.y() < this->point[i - 1].y())) ||
-			((this->point[i - 1].y() <= point.y()) && (point.y() < this->point[i % this->point.size()].y()))) &&
-			(point.x() > (this->point[i - 1].x() - this->point[i % this->point.size()].x()) * (point.y() - this->point[i % this->point.size()].y()) /
-			(this->point[i - 1].y() - this->point[i % this->point.size()].y()) + this->point[i % this->point.size()].x()))
-			res = !res;
+	res = poly.containsPoint(point, Qt::WindingFill);
+
+	if (!res) {
+		for (int i = 0; i < poly.size() && !res; i++) {
+			for (int j = i + 1; j < poly.size() && !res; j++) {
+				if (IsOnLine(point, poly[i], poly[j]))
+					res = true;
+			}
+		}
 	}
-
-	if ((((this->point[0].y() <= point.y()) && (point.y() < this->point[1].y())) ||
-		((this->point[1].y() <= point.y()) && (point.y() < this->point[0].y()))) &&
-		(point.x() > (this->point[1].x() - this->point[0].x()) * 
-		(point.y() - this->point[0].y()) / (this->point[1].y() - this->point[0].y()) + this->point[0].x()))
-		res = !res;
 	
 	return res;
 }
@@ -246,6 +248,184 @@ int Polygon::GetMaxY()
 	int res = 0;
 	for (QPoint p : this->point) {
 		if (p.y() > res) res = p.y();
+	}
+
+	return res;
+}
+
+//
+//Заливка средним
+//
+QImage Polygon::FillAverageLightness(QImage image, QImage src) {
+	if (this->IsLeaf()) {
+		QPixmap px = QPixmap::fromImage(image);
+		QPainter p(&px);
+
+		int pixels_in_polygon = 0;
+		int lightness = 0;
+
+		//Суммируем яркости всех пикселей полигона
+		for (int y = this->GetMinY(); y < this->GetMaxY(); y++) {
+			for (int x = this->GetMinX(); x < this->GetMaxX(); x++) {
+				if (this->ContainsPoint(QPoint(x, y))) {
+					pixels_in_polygon++;
+					lightness += src.pixelColor(x, y).lightness();
+				}
+			}
+		}
+		//находим среднюю яркость и заливаем полигон
+		lightness = lightness / pixels_in_polygon;
+		this->SetFillFactors(0, 0, lightness);
+		QColor clr(lightness, lightness, lightness);
+		QPolygon poly;
+		if (this->point.size() == 2)
+			poly = QPolygon({ this->point[0], QPoint(this->point[1].x(), this->point[0].y()), this->point[1], QPoint(this->point[0].x(), this->point[1].y()) });
+		else
+			poly = QPolygon(this->point);
+		p.setBrush(clr);
+		p.setPen(Qt::PenStyle::NoPen);
+		p.drawPolygon(poly, Qt::WindingFill);
+
+		image = px.toImage();
+	}
+	else {
+		for (Polygon& child : this->children)
+			image = child.FillAverageLightness(image, src);
+	}
+
+	return image;
+}
+
+QImage Polygon::FillLinearRegression(QImage image, QImage src)
+{
+	if (this->IsLeaf()) {
+		//Цикл по строкам
+		for (int y = this->GetMinY(); y <= this->GetMaxY(); y++) {
+			QVector<QVector<long double>> matrix(3, { 0, 0, 0, 0 });
+			/*
+			//Параболическая заливка
+			for (int x = this->GetMinX(); x <= this->GetMaxX(); x++) {
+				if (this->ContainsPoint(QPoint(x, y))) {
+					x++;
+					matrix[0][0] += x*x*x*x; matrix[0][1] += x*x*x; matrix[0][2] += x*x; matrix[0][3] += src.pixelColor(x, y).lightness() * x*x;
+					matrix[1][0] += x*x*x; matrix[1][1] += x*x; matrix[1][2] += x; matrix[1][3] += src.pixelColor(x, y).lightness() * x;
+					matrix[2][0] += x*x; matrix[2][1] += x; matrix[2][2]++; matrix[2][3] += src.pixelColor(x, y).lightness();
+					x--;
+				}
+			}
+
+			if (matrix[0][0] == 0) {
+				int l = 0;
+			}
+			long double k12 = -matrix[1][0] / matrix[0][0];
+			long double k13 = -matrix[2][0] / matrix[0][0];
+			for (int i = 0; i <= 3; i++) {
+				matrix[1][i] += k12 * matrix[0][i];
+			}
+			for (int i = 0; i <= 3; i++) {
+				matrix[2][i] += k13 * matrix[0][i];
+			}
+			long double k23 = -matrix[2][1] / matrix[1][1];
+
+			for (int i = 0; i <= 3; i++) {
+				matrix[2][i] += k23 * matrix[1][i];
+			}
+
+			long double k = matrix[2][2];
+			for (int i = 0; i <= 3; i++) {
+				matrix[2][i] /= k;
+			}
+			long double c = matrix[2][3];
+			k = matrix[1][2];
+			for (int i = 0; i <= 3; i++) {
+				matrix[1][i] -= matrix[2][i] * k;
+			}
+			k = matrix[0][2];
+			for (int i = 0; i <= 3; i++) {
+				matrix[0][i] -= matrix[2][i] * k;
+			}
+
+			k = matrix[1][1];
+			for (int i = 0; i <= 3; i++) {
+				matrix[1][i] /= k;
+			}
+			long double b = matrix[1][3];
+			k = matrix[0][1];
+			for (int i = 0; i <= 3; i++) {
+				matrix[0][i] -= matrix[1][i] * k;
+			}
+			k = matrix[0][0];
+			for (int i = 0; i <= 3; i++) {
+				matrix[0][i] /= k;
+			}
+			long double a = matrix[0][3];
+
+			for (int x = this->GetMinX(); x <= this->GetMaxX() + 1; x++) {
+				if (this->ContainsPoint(QPoint(x, y))) {
+					int lightness = fabs(a*x*x + b*x + c);
+					if (lightness < 0 || lightness >= 256) {
+						int l = 0;
+					}
+					QColor clr(lightness, lightness, lightness);
+					image.setPixelColor(QPoint(x, y), clr);
+				}
+			}
+			*/
+			//Линейное говно
+			//Вычисление коэффициентов для апроксиммирующей прямой
+			for (int x = this->GetMinX(); x <= this->GetMaxX(); x++) {
+				if (this->ContainsPoint(QPoint(x, y))) {
+					matrix[0][0] += x * x; matrix[0][1] += x; matrix[0][2] += x * src.pixelColor(x, y).lightness();
+					matrix[1][0] += x; matrix[1][1]++; matrix[1][2] += src.pixelColor(x, y).lightness();
+				}
+			}
+
+			//Вычисление коэффициентов
+			float k12 = -(float)matrix[1][0] / matrix[0][0];
+			matrix[1][0] += k12 * matrix[0][0];
+			matrix[1][1] += k12 * matrix[0][1];
+			matrix[1][2] += k12 * matrix[0][2];
+			float b = (float)matrix[1][2] / matrix[1][1];
+			float a = (matrix[0][2] - b * matrix[0][1]) / matrix[0][0];
+			//Заливка полигона
+			for (int x = this->GetMinX(); x <= this->GetMaxX() + 1; x++) {
+				if (this->ContainsPoint(QPoint(x, y))) {
+					int lightness = (a * x + b);
+					QColor clr(lightness, lightness, lightness);
+					image.setPixelColor(QPoint(x, y), clr);
+				}
+			}
+		}
+	}
+	else {
+		for (Polygon& child : this->children)
+			image = child.FillLinearRegression(image, src);
+	}
+
+	return image;
+}
+
+QImage Polygon::FillSurfaceRegression(QImage image, QImage src)
+{
+	if (this->IsLeaf()) {
+		
+	}
+	else {
+		for (Polygon& child : this->children)
+			image = child.FillSurfaceRegression(image, src);
+	}
+
+	return image;
+}
+
+bool IsOnLine(QPoint P, QPoint A, QPoint B) {
+	bool res = false;
+	if ((((P.x()) >= A.x() && P.x() <= B.x()) || (P.x() >= B.x() && P.x() <= A.x())) &&
+		((P.y() >= A.y() && P.y() <= B.y()) || (P.y() >= B.y() && P.y() <= A.y()))) {
+		float k = (float)(A.y() - B.y()) / (A.x() - B.x());
+		float b = A.y() - A.x() * k;
+
+		if (P.y() - P.x() * k - b == 0) res = true;
 	}
 
 	return res;
