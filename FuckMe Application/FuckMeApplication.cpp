@@ -125,6 +125,13 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 		ui.restoreBtn->setEnabled(true);
 
 		this->loadImageFromQImage(grid, ui.GridImage);
+
+		float k = 0, r = 0;
+		float size = this->root.getTreeSize();
+		k = 3 * 256 * 256 / size;
+		r = size / 256 / 256;
+		ui.label_4->setText(QString::number(k));
+		ui.label_7->setText(QString::number(r));
 	}
 
 	//
@@ -180,8 +187,8 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 			image = this->root.FillAverageLightness(image, src);
 		}
 		//Ëèíåéíàÿ ðåãðåññèÿ
-		else if (this->ui.LinearRegression->isChecked()) {
-			image = this->root.FillLinearRegression(image, src);
+		else if (this->ui.LinearRegression->isChecked() || this->ui.LinearRegression_2->isChecked()) {
+			image = this->root.FillLinearRegression(image, src, this->ui.LinearRegression->isChecked() ? 0 : 1);
 		}
 		//Ïëîñêîñòíàÿ ðåãðåññèÿ
 		else {
@@ -189,5 +196,27 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 		}
 
 		this->loadImageFromQImage(image, ui.ResImage);
+
+		ui.label_5->setText(this->getSD(image, ui.SrcImage->pixmap()->toImage()));
+	}
+
+	QString FuckMeApplication::getSD(QImage resImage, QImage src) {
+		float SKO = 0;
+
+		int sqSum = 0, n = 0;
+
+		for (int i = 0; i < 256; i++)
+		{
+			for (int j = 0; j < 256; j++)
+			{
+				int sub = src.pixelColor(j, i).lightness() - resImage.pixelColor(j, i).lightness();
+				sqSum += sub * sub;
+				n++;
+			}
+		}
+
+		SKO = sqrt(sqSum / n);
+
+		return QString::number(SKO);
 	}
 /*----------------------------------------------------------ÂÎÑÑÒÀÍÎÂËÅÍÈÅ ÈÇÎÁÐÀÆÅÍÈß--------------------------------------------------*/

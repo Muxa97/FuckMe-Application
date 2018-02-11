@@ -43,6 +43,11 @@ private:
 	*/
 	QImage DrawGrid(QImage, Polygon);
 
+	/**
+	* Вычисление СКО
+	*/
+	QString getSD(QImage, QImage);
+
 private slots:
 	void loadBtnHandler();
 	void clearBtnHandler();

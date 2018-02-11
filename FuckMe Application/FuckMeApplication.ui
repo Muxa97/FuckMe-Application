@@ -196,7 +196,7 @@ border: 2px solid black;</string>
     <property name="geometry">
      <rect>
       <x>570</x>
-      <y>370</y>
+      <y>380</y>
       <width>141</width>
       <height>17</height>
      </rect>
@@ -259,11 +259,12 @@ border: 2px solid black;</string>
       <x>570</x>
       <y>350</y>
       <width>141</width>
-      <height>17</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>Линейная регрессия</string>
+     <string>Линейная регрессия
+(Линейная)</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="AverageLightness">
@@ -378,6 +379,23 @@ border: 2px solid black;</string>
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QRadioButton" name="LinearRegression_2">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>350</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Линейная регрессия
+(Параболическая)</string>
+    </property>
    </widget>
   </widget>
   <widget class="QToolBar" name="mainToolBar">

@@ -105,7 +105,7 @@ public:
 	* @param QImage src - исходное изображение
 	* @return QImage image - восстановленное изображение
 	*/
-	QImage FillLinearRegression(QImage, QImage);
+	QImage FillLinearRegression(QImage, QImage, int);
 
 	/**
 	* «аливка с помощью плоскостной регрессии
@@ -115,6 +115,10 @@ public:
 	*/
 	QImage FillSurfaceRegression(QImage, QImage);
 	
+	/**
+	* ¬озвращает размер дерева полигонов
+	*/
+	float getTreeSize();
 };
 
 /**
