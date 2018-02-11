@@ -3,7 +3,6 @@
 #include <QtWidgets/QMainWindow>
 #include <QFileDialog>
 #include <QStandardPaths>
-#include <QTextStream>
 #include <QMouseEvent>
 #include <QEvent>
 #include <QObject>
@@ -52,7 +51,7 @@ private slots:
 	void loadBtnHandler();
 	void clearBtnHandler();
 	void splitBtnHandler();
-	/*void sgBtnHandler();
-	void lgBtnHandler();*/
+	void sgBtnHandler();
+	void lgBtnHandler();
 	void restoreBtnHandler();
 };

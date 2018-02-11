@@ -9,8 +9,8 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 	connect(ui.loadBtn, SIGNAL(released()), this, SLOT(loadBtnHandler()));
 	connect(ui.clearBtn, SIGNAL(released()), this, SLOT(clearBtnHandler()));
 	connect(ui.splitBtn, SIGNAL(released()), this, SLOT(splitBtnHandler()));
-	connect(ui.SaveGridBtn, SIGNAL(released()), this, SLOT(sgBtnButtonHandler()));
-	connect(ui.LoadGridBtn, SIGNAL(released()), this, SLOT(lgButtonHandler()));
+	connect(ui.SaveGridBtn, SIGNAL(released()), this, SLOT(sgBtnHandler()));
+	connect(ui.LoadGridBtn, SIGNAL(released()), this, SLOT(lgBtnHandler()));
 	connect(ui.restoreBtn, SIGNAL(released()), this, SLOT(restoreBtnHandler()));
 
 }
@@ -121,7 +121,6 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 
 		//Подрубаем кнопки
 		ui.clearBtn->setEnabled(true);
-		ui.SaveGridBtn->setEnabled(true);
 		ui.restoreBtn->setEnabled(true);
 
 		this->loadImageFromQImage(grid, ui.GridImage);
@@ -198,6 +197,7 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 		this->loadImageFromQImage(image, ui.ResImage);
 
 		ui.label_5->setText(this->getSD(image, ui.SrcImage->pixmap()->toImage()));
+		ui.SaveGridBtn->setEnabled(true);
 	}
 
 	QString FuckMeApplication::getSD(QImage resImage, QImage src) {
@@ -220,3 +220,45 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 		return QString::number(SKO);
 	}
 /*----------------------------------------------------------ВОССТАНОВЛЕНИЕ ИЗОБРАЖЕНИЯ--------------------------------------------------*/
+/*----------------------------------------------------------СОХРАНЕНИЕ И ЗАГРУЗКА СЕТКИ-------------------------------------------------*/
+
+	void FuckMeApplication::sgBtnHandler() {
+		QString filename = QFileDialog::getSaveFileName(this, "Сохранение сетки", "c:\\test\\picture", "Grid (*.grid)", &tr("*.grid"));
+		QFile file(filename);
+
+		if (file.open(QIODevice::ReadWrite | QIODevice::Truncate))
+		{
+			QTextStream stream(&file);
+
+			stream << this->root.GetType() << endl;
+
+			this->root.WriteTreeToFile(stream, 0);
+		}
+		file.close();
+	}
+
+	void FuckMeApplication::lgBtnHandler() {
+		QImage image(256, 256, QImage::Format_Grayscale8);
+		image.fill(Qt::white);
+
+		this->loadImageFromQImage(image, ui.GridImage);
+
+		QString filename = QFileDialog::getOpenFileName(this, tr("Load Grid"), "c:\\test\\", tr("Grid (*.grid) ;; All files (*.*)"), &tr("Grid (*.grid)"));
+		QFile file(filename);
+		if (file.open(QIODevice::ReadOnly))
+		{
+			QTextStream stream(&file);
+			
+			int t = 0;
+			stream >> t;
+			PolyType type = (PolyType)t;
+
+			this->root.ReadTreeFromFile(stream, type);
+			image = this->DrawGrid(image, this->root);
+
+			file.close();
+
+			this->loadImageFromQImage(image, ui.GridImage);
+			ui.clearBtn->setEnabled(true);
+		}
+	}

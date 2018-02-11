@@ -498,6 +498,47 @@ float Polygon::getTreeSize()
 	return size;
 }
 
+void Polygon::WriteTreeToFile(QTextStream & stream, int depth)
+{
+	for (int i = 0; i < depth * 2; i++) stream << ' ';
+	if (this->IsLeaf()) {
+		for (int i = 0; i < 3; i++) stream << this->fill_factors[i] << ' ';
+		stream << endl;
+	}
+	else {
+		stream << '{' << endl;
+		for (Polygon& child : this->children) {
+			child.WriteTreeToFile(stream, depth + 1);
+		}
+
+		for (int i = 0; i < depth * 2; i++) stream << ' ';
+		stream << '}' << endl;
+	}
+}
+
+void Polygon::ReadTreeFromFile(QTextStream & stream, PolyType type)
+{
+	stream.skipWhiteSpace();
+	char c = ' ';
+	this->type = type;
+
+	stream >> c;
+	if (c == '{') {
+		this->AddChildren();
+
+		for (Polygon& child : this->children) {
+			child.ReadTreeFromFile(stream, type);
+		}
+	}
+	else if (c != '}') {
+		stream.seek(stream.pos() - 1);
+
+		for (int i = 0; i < 3; i++) {
+			stream >> this->fill_factors[i];
+		}
+	}
+}
+
 bool IsOnLine(QPoint P, QPoint A, QPoint B) {
 	bool res = false;
 	if ((((P.x()) >= A.x() && P.x() <= B.x()) || (P.x() >= B.x() && P.x() <= A.x())) &&

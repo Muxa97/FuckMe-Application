@@ -3,6 +3,7 @@
 #include <QVector>
 #include <QPoint>
 #include <QPainter>
+#include <QTextStream>
 
 enum PolyType {
 	TRIANGLE,
@@ -119,6 +120,16 @@ public:
 	* Возвращает размер дерева полигонов
 	*/
 	float getTreeSize();
+
+	/**
+	* Запись дерева в файл
+	*/
+	void WriteTreeToFile(QTextStream&, int);
+
+	/**
+	* Считывание дерева из файла
+	*/
+	void ReadTreeFromFile(QTextStream&, PolyType);
 };
 
 /**
