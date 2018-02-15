@@ -13,6 +13,9 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 	connect(ui.LoadGridBtn, SIGNAL(released()), this, SLOT(lgBtnHandler()));
 	connect(ui.restoreBtn, SIGNAL(released()), this, SLOT(restoreBtnHandler()));
 
+	connect(ui.SrcImage, SIGNAL(clicked(QMouseEvent*)), this, SLOT(ImageClickHandler(QMouseEvent*)));
+	connect(ui.GridImage, SIGNAL(clicked(QMouseEvent*)), this, SLOT(ImageClickHandler(QMouseEvent*)));
+	connect(ui.ResImage, SIGNAL(clicked(QMouseEvent*)), this, SLOT(ImageClickHandler(QMouseEvent*)));
 }
 
 /*------------------------------------------------------------гюцпсгйю хгнапюфемхъ-----------------------------------------------------*/
@@ -262,3 +265,28 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 			ui.clearBtn->setEnabled(true);
 		}
 	}
+
+/*----------------------------------------------------------янупюмемхе х гюцпсгйю яерйх-------------------------------------------------*/
+/*-----------------------------------------------------------бшдекемхе назейрю он йкхйс-------------------------------------------------*/
+
+	void FuckMeApplication::ImageClickHandler(QMouseEvent* event) {
+		Polygon poly = *(this->root.GetPolygonByPoint(QPoint(event->pos().x(), event->pos().y())));
+
+		QVector<Polygon> neighbours;
+		neighbours = poly.GetNeighbours(this->root, neighbours);
+
+		QImage image(256, 256, QImage::Format_Grayscale8);
+		image.fill(Qt::white);
+		QPixmap px = QPixmap::fromImage(image);
+		QPainter p(&px);
+		QColor clr(0, 0, 0);
+
+		for (Polygon poly : neighbours) {
+			p.drawPolygon(poly.toQPolygon(), Qt::OddEvenFill);
+		}
+		image = px.toImage();
+
+		this->loadImageFromQImage(image, ui.ObjImage);
+	}
+
+/*-----------------------------------------------------------бшдекемхе назейрю он йкхйс-------------------------------------------------*/

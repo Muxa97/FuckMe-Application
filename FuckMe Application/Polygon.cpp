@@ -58,6 +58,20 @@ PolyType Polygon::GetType()
 	return this->type;
 }
 
+QPolygon Polygon::toQPolygon()
+{
+	if (this->type == TRIANGLE) return QPolygon(this->point);
+	else {
+		QVector<QPoint> points;
+		points.push_back(this->point[0]);
+		points.push_back(QPoint(this->point[1].x(), this->point[0].y()));
+		points.push_back(this->point[1]);
+		points.push_back(QPoint(this->point[0].x(), this->point[1].y()));
+
+		return QPolygon(points);
+	}
+}
+
 void Polygon::CreateGrid(QImage src, int threshold)
 {
 	//Если площадь полигона меньше 4, то не разбиваем его (условие выхода из рекурсии)
@@ -521,14 +535,17 @@ void Polygon::ReadTreeFromFile(QTextStream & stream, PolyType type)
 	stream.skipWhiteSpace();
 	char c = ' ';
 	this->type = type;
-
-	stream >> c;
+	do {
+		stream >> c;
+	} while (c == ' ' || c == '\n' || c == '}');
 	if (c == '{') {
 		this->AddChildren();
 
 		for (Polygon& child : this->children) {
 			child.ReadTreeFromFile(stream, type);
 		}
+
+		stream >> c;
 	}
 	else if (c != '}') {
 		stream.seek(stream.pos() - 1);
@@ -537,6 +554,39 @@ void Polygon::ReadTreeFromFile(QTextStream & stream, PolyType type)
 			stream >> this->fill_factors[i];
 		}
 	}
+}
+
+Polygon* Polygon::GetPolygonByPoint(QPoint point)
+{
+	if (this->ContainsPoint(point)) {
+		if (this->IsLeaf()) return this;
+		else {
+			for (Polygon child : this->children) {
+				if (child.GetPolygonByPoint(point)) return &child;
+			}
+		}
+	}
+	else return nullptr;
+}
+
+QVector<Polygon> Polygon::GetNeighbours(Polygon root, QVector<Polygon> n)
+{
+	if (this->Intersect(root)) {
+		if (root.IsLeaf()) n.push_back(root);
+		else for (Polygon child : root.children)
+			n = this->GetNeighbours(child, n);
+	}
+	return n;
+}
+
+bool Polygon::Intersect(Polygon poly)
+{
+	QPolygon p1, p2;
+	p1 = this->toQPolygon();
+	p2 = poly.toQPolygon();
+
+	if (p1.intersected(p2).size() != 0) return true;
+	else return false;
 }
 
 bool IsOnLine(QPoint P, QPoint A, QPoint B) {

@@ -44,7 +44,7 @@ public:
 	QVector<Polygon> GetChildren();
 	QVector<float> GetFillFactors();
 	PolyType GetType();
-
+	QPolygon toQPolygon();
 	/**
 	* Создание сетки в зависимости от порога
 	* @param QImage src - исходное изображение
@@ -130,6 +130,21 @@ public:
 	* Считывание дерева из файла
 	*/
 	void ReadTreeFromFile(QTextStream&, PolyType);
+
+	/**
+	* Поиск полигона-листа, содержащего данную точку
+	*/
+	Polygon* GetPolygonByPoint(QPoint);
+
+	/**
+	* Поиск соседей полигона
+	*/
+	QVector<Polygon> GetNeighbours(Polygon, QVector<Polygon>);
+
+	/**
+	* Определяет, пересекаются ли полигоны
+	*/
+	bool Intersect(Polygon);
 };
 
 /**

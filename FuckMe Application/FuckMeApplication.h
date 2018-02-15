@@ -54,4 +54,5 @@ private slots:
 	void sgBtnHandler();
 	void lgBtnHandler();
 	void restoreBtnHandler();
+	void ImageClickHandler(QMouseEvent*);
 };
