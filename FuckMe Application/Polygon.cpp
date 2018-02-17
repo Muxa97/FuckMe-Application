@@ -60,7 +60,15 @@ PolyType Polygon::GetType()
 
 QPolygon Polygon::toQPolygon()
 {
-	if (this->type == TRIANGLE) return QPolygon(this->point);
+	if (this->type == TRIANGLE && this->point.size() > 2) {
+
+		QVector<QPoint> points;
+		points.push_back(this->point[0]);
+		points.push_back(this->point[1]);
+		points.push_back(this->point[2]);
+
+		return QPolygon(points);
+	}
 	else {
 		QVector<QPoint> points;
 		points.push_back(this->point[0]);
@@ -70,6 +78,17 @@ QPolygon Polygon::toQPolygon()
 
 		return QPolygon(points);
 	}
+}
+
+int Polygon::GetLeafsNumber()
+{
+	int res = 0;
+	if (this->IsLeaf()) res = 1;
+	else
+		for (Polygon& p : this->children)
+			res += p.GetLeafsNumber();
+
+	return res;
 }
 
 void Polygon::CreateGrid(QImage src, int threshold)
@@ -561,20 +580,24 @@ Polygon* Polygon::GetPolygonByPoint(QPoint point)
 	if (this->ContainsPoint(point)) {
 		if (this->IsLeaf()) return this;
 		else {
-			for (Polygon child : this->children) {
-				if (child.GetPolygonByPoint(point)) return &child;
+			for (Polygon& child : this->children) {
+				Polygon* res = child.GetPolygonByPoint(point);
+				if (res) return res;
 			}
 		}
 	}
 	else return nullptr;
 }
 
-QVector<Polygon> Polygon::GetNeighbours(Polygon root, QVector<Polygon> n)
+QVector<Polygon> Polygon::GetNeighbours(Polygon& root, QVector<Polygon> n, int av_l)
 {
 	if (this->Intersect(root)) {
-		if (root.IsLeaf()) n.push_back(root);
-		else for (Polygon child : root.children)
-			n = this->GetNeighbours(child, n);
+		if (root.IsLeaf() && 
+			abs(av_l - root.GetFillFactors()[2]) < 10) n.push_back(root);
+		else {
+			for (Polygon& child : root.children)
+				n = this->GetNeighbours(child, n, av_l);
+		}
 	}
 	return n;
 }
@@ -585,8 +608,37 @@ bool Polygon::Intersect(Polygon poly)
 	p1 = this->toQPolygon();
 	p2 = poly.toQPolygon();
 
-	if (p1.intersected(p2).size() != 0) return true;
-	else return false;
+	for (int i = 0; i < p1.size(); i++) {
+		for (int j = 1; j <= p2.size(); j++) {
+			if (IsOnLine(p1[i], p2[j - 1], p2[(j - 1) % p2.size()]) || poly.ContainsPoint(p1[i]))
+				return true;
+		}
+	}
+
+	for (int i = 0; i < p2.size(); i++) {
+		for (int j = 1; j <= p1.size(); j++) {
+			if (IsOnLine(p2[i], p1[j - 1], p1[(j - 1) % p2.size()]) || this->ContainsPoint(p2[i]))
+				return true;
+		}
+	}
+
+	return false;
+}
+
+bool Polygon::IsInArray(QVector<Polygon> arr)
+{
+	bool res = true;
+	for (Polygon& p : arr) {
+		for (QPoint p1 : this->point) {
+			bool r = false;
+			for (QPoint p2 : p.point) {
+				r = r || (p1.x() == p2.x() && p1.y() == p2.y());
+			}
+			res = res && r;
+		}
+		if (res) return true;
+	}
+	return false;
 }
 
 bool IsOnLine(QPoint P, QPoint A, QPoint B) {

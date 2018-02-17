@@ -270,19 +270,26 @@ FuckMeApplication::FuckMeApplication(QWidget *parent)
 /*-----------------------------------------------------------ÂÛÄÅËÅÍÈÅ ÎÁÚÅÊÒÀ ÏÎ ÊËÈÊÓ-------------------------------------------------*/
 
 	void FuckMeApplication::ImageClickHandler(QMouseEvent* event) {
-		Polygon poly = *(this->root.GetPolygonByPoint(QPoint(event->pos().x(), event->pos().y())));
+		Polygon* poly = this->root.GetPolygonByPoint(QPoint(event->pos().x(), event->pos().y()));
 
 		QVector<Polygon> neighbours;
-		neighbours = poly.GetNeighbours(this->root, neighbours);
-
+		neighbours = poly->GetNeighbours(this->root, neighbours, poly->GetFillFactors()[2]);
+		int n = this->root.GetLeafsNumber();
+		/*
+		for (int i = 0; i < neighbours.size() && i < n / 3; i++) {
+			neighbours = neighbours[i].GetNeighbours(this->root, neighbours, poly->GetFillFactors()[2]);
+		}
+		*/
 		QImage image(256, 256, QImage::Format_Grayscale8);
 		image.fill(Qt::white);
 		QPixmap px = QPixmap::fromImage(image);
 		QPainter p(&px);
-		QColor clr(0, 0, 0);
 
 		for (Polygon poly : neighbours) {
-			p.drawPolygon(poly.toQPolygon(), Qt::OddEvenFill);
+			int lightness = poly.GetFillFactors()[2];
+			p.setBrush(QColor(lightness, lightness, lightness));
+			p.setPen(QColor(lightness, lightness, lightness));
+			p.drawPolygon(poly.toQPolygon(), Qt::WindingFill);
 		}
 		image = px.toImage();
 

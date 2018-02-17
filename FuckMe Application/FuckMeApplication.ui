@@ -14,7 +14,7 @@
    <string>FuckMeApplication</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QLabel" name="SrcImage">
+   <widget class="QCLabel" name="SrcImage">
     <property name="enabled">
      <bool>true</bool>
     </property>
@@ -37,7 +37,7 @@ border: 2px solid black;</string>
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="GridImage">
+   <widget class="QCLabel" name="GridImage">
     <property name="enabled">
      <bool>true</bool>
     </property>
@@ -60,7 +60,7 @@ border: 2px solid black;</string>
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="ResImage">
+   <widget class="QCLabel" name="ResImage">
     <property name="enabled">
      <bool>true</bool>
     </property>
@@ -409,6 +409,13 @@ border: 2px solid black;</string>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QCLabel</class>
+   <extends>QLabel</extends>
+   <header>qclabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="FuckMeApplication.qrc"/>
  </resources>

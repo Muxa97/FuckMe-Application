@@ -45,6 +45,7 @@ public:
 	QVector<float> GetFillFactors();
 	PolyType GetType();
 	QPolygon toQPolygon();
+	int GetLeafsNumber();
 	/**
 	* —оздание сетки в зависимости от порога
 	* @param QImage src - исходное изображение
@@ -139,12 +140,14 @@ public:
 	/**
 	* ѕоиск соседей полигона
 	*/
-	QVector<Polygon> GetNeighbours(Polygon, QVector<Polygon>);
+	QVector<Polygon> GetNeighbours(Polygon&, QVector<Polygon>, int);
 
 	/**
 	* ќпредел€ет, пересекаютс€ ли полигоны
 	*/
 	bool Intersect(Polygon);
+
+	bool IsInArray(QVector<Polygon>);
 };
 
 /**
